@@ -4,13 +4,18 @@
  */
 
 import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { type Equipment, exercises } from './data/exercises';
+import { getLevel, getRank, XP_PER_LEVEL } from './constants';
+import Dashboard from './pages/Dashboard';
+import QuestBoard from './pages/QuestBoard';
 
-function QuestCard({ exercise }: { exercise: any }) {
+function QuestCard({ exercise, onComplete }: { exercise: any, onComplete: (xp: number) => void }) {
     const [xpGained, setXPGained] = useState(false);
 
     const handleComplete = () => {
+        onComplete(exercise.xpValue);
         setXPGained(true);
         setTimeout(() => setXPGained(false), 2000);
     };
@@ -53,6 +58,12 @@ function QuestCard({ exercise }: { exercise: any }) {
 export default function App() {
   const [onboarded, setOnboarded] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
+  const [totalXP, setTotalXP] = useState(0);
+
+  const level = getLevel(totalXP);
+  const rank = getRank(level);
+  const xpInLevel = totalXP % XP_PER_LEVEL;
+  const progressToNextLevel = (xpInLevel / XP_PER_LEVEL) * 100;
 
   const equipmentOptions: Equipment[] = ['None/Bodyweight', 'Minimal', 'Dumbbells/Kettlebells', 'Full Gym'];
 
@@ -92,27 +103,44 @@ export default function App() {
   }
 
   const filteredExercises = exercises.filter(e => e.equipment === selectedEquipment);
+  const groupedExercises = {
+    daily: filteredExercises.filter(e => e.type === 'daily'),
+    weekly: filteredExercises.filter(e => e.type === 'weekly'),
+    monthly: filteredExercises.filter(e => e.type === 'monthly'),
+    general: filteredExercises.filter(e => e.type === 'general'),
+  };
 
   return (
-    <div className="flex w-full h-screen bg-app-bg text-app-text overflow-hidden">
-      {/* Sidebar: Simplified placeholder */}
-      <aside className="w-72 bg-app-sidebar border-r border-white/5 flex flex-col p-6 shrink-0">
-        <h2 className="text-xl font-bold mb-8">Jax_Dagger</h2>
-        <div className="text-app-accent font-bold uppercase tracking-widest text-xs">Steel Warrior</div>
-        <div className="mt-4 text-sm text-gray-400">Equipment: {selectedEquipment}</div>
-      </aside>
-      
-      {/* Main Content */}
-      <main className="flex-1 p-10 overflow-auto">
-        <h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none mb-10">Dashboard</h1>
-        <div className="bg-app-sidebar border border-white/5 rounded-3xl p-8">
-            <h2 className="text-2xl font-bold mb-4">Available Quests</h2>
-            <div className="grid grid-cols-2 gap-4">
-                {filteredExercises.map(e => <QuestCard key={e.id} exercise={e} />)}
-            </div>
-        </div>
-      </main>
-    </div>
+    <Router>
+      <div className="flex w-full h-screen bg-app-bg text-app-text overflow-hidden">
+        <aside className="w-72 bg-app-sidebar border-r border-white/5 flex flex-col p-6 shrink-0">
+          <h2 className="text-xl font-bold mb-2">Jax_Dagger</h2>
+          <div className="text-app-accent font-bold uppercase tracking-widest text-xs mb-8">{rank} (Level {level})</div>
+          
+          <div className="space-y-2 mb-8">
+              <div className="flex justify-between text-xs font-bold uppercase tracking-tighter">
+                  <span>XP</span>
+                  <span className="text-gray-500">{xpInLevel} / {XP_PER_LEVEL}</span>
+              </div>
+              <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-app-accent" style={{ width: `${progressToNextLevel}%` }}></div>
+              </div>
+          </div>
+          
+          <nav className="space-y-4">
+            <Link to="/" className="block p-3 hover:bg-white/5 rounded-xl text-lg font-bold">Dashboard</Link>
+            <Link to="/quests" className="block p-3 hover:bg-white/5 rounded-xl text-lg font-bold">Quests</Link>
+          </nav>
+        </aside>
+        <main className="flex-1 overflow-auto">
+          <Routes>
+            <Route path="/" element={<Dashboard totalXP={totalXP} />} />
+            <Route path="/quests" element={<QuestBoard equipment={selectedEquipment!} onComplete={(xp) => setTotalXP(prev => prev + xp)} />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
   );
 }
 
