@@ -1,0 +1,37 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Athlete profile for XP tracking",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "xp": { "type": "number" },
+        "rank": { "type": "string" },
+        "equipment": { "type": "array" }
+      },
+      "required": ["uid", "xp", "rank"]
+    },
+    "Exercise": {
+      "title": "Exercise",
+      "description": "Available exercises",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "equipment": { "type": "string" },
+        "xpValue": { "type": "number" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Stores user progress and profile"
+    },
+    "/exercises": {
+      "schema": "Exercise",
+      "description": "Exercise database"
+    }
+  }
+}
