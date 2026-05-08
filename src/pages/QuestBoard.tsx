@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { exercises, type QuestType, type Exercise } from '../data/exercises';
 
 interface QuestCardProps {
-  exercise: any;
+  exercise: Exercise;
   onComplete: (xp: number) => void;
 }
 
@@ -16,16 +17,26 @@ function QuestCard({ exercise, onComplete }: QuestCardProps) {
     };
 
     return (
-        <motion.div layout className="relative bg-white/5 p-4 rounded-xl border border-white/5 overflow-hidden">
+        <motion.div layout className="relative bg-white/5 p-4 rounded-xl border border-white/5 overflow-hidden flex flex-col gap-2">
             <h3 className="font-bold text-app-accent">{exercise.name}</h3>
-            <p className="text-sm text-gray-400 mb-2">{exercise.description}</p>
-            <div className="flex justify-between items-center text-xs font-mono mb-4">
+            <p className="text-sm text-gray-400">{exercise.description}</p>
+            <div className="flex flex-wrap gap-1 text-xs text-gray-500 font-mono">
+              <span className="bg-white/5 px-2 py-0.5 rounded">{exercise.muscleGroups.join(', ')}</span>
+              <span className="bg-white/5 px-2 py-0.5 rounded">{exercise.calories} kcal</span>
+              <span className="bg-white/5 px-2 py-0.5 rounded">{exercise.difficulty}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs font-mono mt-2 mb-4">
                 <span className="text-gray-300">Target: {exercise.target}</span>
                 <span className="text-app-accent font-bold">XP: {exercise.xpValue}</span>
             </div>
-            <button onClick={handleComplete} className="w-full py-2 bg-white/10 hover:bg-app-accent hover:text-black font-bold uppercase tracking-widest text-xs rounded-lg transition-all">
-                Complete Quest
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+                <button onClick={handleComplete} className="w-full py-2 bg-white/10 hover:bg-app-accent hover:text-black font-bold uppercase tracking-widest text-xs rounded-lg transition-all">
+                    Complete
+                </button>
+                <Link to={`/workout/${exercise.id}`} className="w-full py-2 bg-app-accent text-black font-bold uppercase tracking-widest text-xs rounded-lg transition-all text-center flex items-center justify-center">
+                    Workout
+                </Link>
+            </div>
             <AnimatePresence>
                 {xpGained && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: -20 }} exit={{ opacity: 0 }} className="absolute inset-0 flex items-center justify-center bg-app-bg/80 text-app-accent font-black text-2xl">
@@ -41,9 +52,8 @@ export default function QuestBoard({ equipment, onComplete }: { equipment: strin
     const filteredExercises = exercises.filter(e => e.equipment === equipment);
     const groupedExercises = {
         daily: filteredExercises.filter(e => e.type === 'daily'),
-        weekly: filteredExercises.filter(e => e.type === 'weekly'),
-        monthly: filteredExercises.filter(e => e.type === 'monthly'),
-        general: filteredExercises.filter(e => e.type === 'general'),
+        skill: filteredExercises.filter(e => e.type === 'skill'),
+        boss: filteredExercises.filter(e => e.type === 'boss'),
     };
 
     return (
